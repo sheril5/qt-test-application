@@ -1,0 +1,143 @@
+---
+# Source: payment/templates/namespace.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: sample
+---
+# Source: payment/templates/order-configmap.yaml
+# (C) Copyright 2019-2023 Hewlett Packard Enterprise Development LP
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: payment-config
+  namespace: sample
+  labels:
+    app: payment
+    release: release-name
+data:
+  PORT: "8080"
+---
+# Source: payment/templates/payment.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: sample
+  name: payment
+  labels:
+    name: payment
+    app: payment
+    app.kubernetes.io/name: payment
+    app.kubernetes.io/instance: payment
+    chart: payment-0.1.0
+    heritage: Helm
+    release: release-name
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      protocol: TCP
+      port: 8080
+      targetPort: 8080
+  selector:
+    name: payment
+    app: payment
+    app.kubernetes.io/name: payment
+    app.kubernetes.io/instance: payment
+---
+# Source: payment/templates/order-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    wave.pusher.com/update-on-config-change: "true"
+  name: payment
+  labels:
+    name: payment
+    app: payment
+    chart: payment-0.1.0
+    heritage: Helm
+    release: release-name
+  namespace: sample
+spec:
+  replicas: 
+  selector:
+    matchLabels:
+      name: payment
+      app: payment
+      app.kubernetes.io/name: payment
+      app.kubernetes.io/instance: payment
+      chart: payment-0.1.0
+
+  template:
+    metadata:
+      labels:
+        name: payment
+        app: payment
+        app.kubernetes.io/name: payment
+        app.kubernetes.io/instance: payment
+        chart: payment-0.1.0
+      namespace: sample
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/support/metrics"
+        prometheus.io/port: "8080"
+    spec:
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 1
+              preference:
+                matchExpressions:
+                  - key: node.kubernetes.io/lifecycle
+                    operator: In
+                    values:
+                      - SpotInstance
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - payment
+                topologyKey: kubernetes.io/hostname
+      containers:
+        - name: payment
+          image: "payment:latest"
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: payment-config
+          env:
+            - name: GIN_ACCESS_LOG
+              value: "true"
+            - name: GIN_MODE
+              value: "debug"
+          ports:
+            - name: http
+              protocol: TCP
+              containerPort: 8080              
+          resources:
+            limits:
+              cpu: 100m
+              memory: 128Mi
+            requests:
+              cpu: 10m
+              memory: 64Mi
+          readinessProbe:
+            httpGet:
+              path: /status
+              port: 8080
+            initialDelaySeconds: 10
+            timeoutSeconds: 2
+            periodSeconds: 30
+          livenessProbe:
+            httpGet:
+              path: /status
+              port: 8080
+            initialDelaySeconds: 10
+            timeoutSeconds: 2
+            periodSeconds: 60

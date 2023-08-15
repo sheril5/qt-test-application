@@ -1,0 +1,143 @@
+---
+# Source: order/templates/namespace.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: sample
+---
+# Source: order/templates/order-configmap.yaml
+# (C) Copyright 2019-2023 Hewlett Packard Enterprise Development LP
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: order-config
+  namespace: sample
+  labels:
+    app: order
+    release: release-name
+data:
+  PORT: "8080"
+---
+# Source: order/templates/order.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: sample
+  name: order
+  labels:
+    name: order
+    app: order
+    app.kubernetes.io/name: order
+    app.kubernetes.io/instance: order
+    chart: order-0.1.0
+    heritage: Helm
+    release: release-name
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      protocol: TCP
+      port: 8080
+      targetPort: 8080
+  selector:
+    name: order
+    app: order
+    app.kubernetes.io/name: order
+    app.kubernetes.io/instance: order
+---
+# Source: order/templates/order-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    wave.pusher.com/update-on-config-change: "true"
+  name: order
+  labels:
+    name: order
+    app: order
+    chart: order-0.1.0
+    heritage: Helm
+    release: release-name
+  namespace: sample
+spec:
+  replicas: 
+  selector:
+    matchLabels:
+      name: order
+      app: order
+      app.kubernetes.io/name: order
+      app.kubernetes.io/instance: order
+      chart: order-0.1.0
+
+  template:
+    metadata:
+      labels:
+        name: order
+        app: order
+        app.kubernetes.io/name: order
+        app.kubernetes.io/instance: order
+        chart: order-0.1.0
+      namespace: sample
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/support/metrics"
+        prometheus.io/port: "8080"
+    spec:
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 1
+              preference:
+                matchExpressions:
+                  - key: node.kubernetes.io/lifecycle
+                    operator: In
+                    values:
+                      - SpotInstance
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - order
+                topologyKey: kubernetes.io/hostname
+      containers:
+        - name: order
+          image: "order:latest"
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: order-config
+          env:
+            - name: GIN_ACCESS_LOG
+              value: "true"
+            - name: GIN_MODE
+              value: "debug"
+          ports:
+            - name: http
+              protocol: TCP
+              containerPort: 8080              
+          resources:
+            limits:
+              cpu: 100m
+              memory: 128Mi
+            requests:
+              cpu: 10m
+              memory: 64Mi
+          readinessProbe:
+            httpGet:
+              path: /status
+              port: 8080
+            initialDelaySeconds: 10
+            timeoutSeconds: 2
+            periodSeconds: 30
+          livenessProbe:
+            httpGet:
+              path: /status
+              port: 8080
+            initialDelaySeconds: 10
+            timeoutSeconds: 2
+            periodSeconds: 60

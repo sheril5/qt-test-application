@@ -1,0 +1,24 @@
+image:
+  registry:
+  repository: user
+  tag: latest  # will be replaced
+  pullPolicy: Always
+
+namespace: qtapp
+
+resources:
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 10m
+    memory: 64Mi
+env:
+  GIN_MODE: debug
+  GIN_ACCESS_LOG: true
+
+service:
+  name: user
+  serviceType: ClusterIP
+  internalPort: 8080
+  externalPort: 8080

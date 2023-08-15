@@ -1,5 +1,5 @@
 export GO111MODULE = on
-APP_NAME?=sample-http-server
+APP_NAME?=qt-test-application
 
 TOOLS_DIR		:= .tools/
 GOLANGCI_LINT	:= ${TOOLS_DIR}github.com/golangci/golangci-lint/cmd/golangci-lint@v1.52.1${BIN_EXE}
@@ -45,19 +45,51 @@ run:
 	PORT=8088 \
 	CGO_ENABLED=0 GO111MODULE=on /usr/local/go/bin/go run -mod=vendor  cmd/sample-http-server/main.go
 
-build:
-	env GOOS=linux CGO_ENABLED=0 GO111MODULE=on /usr/local/go/bin/go build -mod=vendor -o builds/sample-http-server cmd/sample-http-server/main.go
+
+build: build_user  build_payment build_order
+build_user:
+	env GOOS=linux CGO_ENABLED=0 GO111MODULE=on /usr/local/go/bin/go build -mod=vendor -o builds/user cmd/user/main.go
+
+
+build_payment:
+	env GOOS=linux CGO_ENABLED=0 GO111MODULE=on /usr/local/go/bin/go build -mod=vendor -o builds/payment cmd/payment/main.go
+
+
+build_order:
+	env GOOS=linux CGO_ENABLED=0 GO111MODULE=on /usr/local/go/bin/go build -mod=vendor -o builds/order cmd/order/main.go
+
 
 docker-build: build
-	docker build --rm -t sample-http-server .
+	docker build --rm -t user -f ./docker/user/Dockerfile .
+	docker build --rm -t order -f ./docker/order/Dockerfile .
+	docker build --rm -t payment -f ./docker/payment/Dockerfile .
 
+docker-build-images: docker-login  docker-build-images-user docker-build-images-order docker-build-images-payment
 
-docker-build-images: docker-build
+docker-login:
 	docker login -u ${ARTIFACTORY_USER} -p ${ARTIFACTORY_PASSWORD}
-	docker tag sample-http-server snagarju/sample-http-server:latest
-	docker tag sample-http-server snagarju/sample-http-server:${BUILD_VERSION}
-	docker push snagarju/sample-http-server:latest
-	docker push snagarju/sample-http-server:${BUILD_VERSION}
+
+
+docker-build-images-user:
+	docker tag user snagarju/user:latest
+	docker tag user snagarju/user:${BUILD_VERSION}
+	docker push snagarju/user:latest
+	docker push snagarju/user:${BUILD_VERSION}
+
+
+docker-build-images-payment:
+	docker tag payment snagarju/payment:latest
+	docker tag payment snagarju/payment:${BUILD_VERSION}
+	docker push snagarju/payment:latest
+	docker push snagarju/payment:${BUILD_VERSION}
+
+
+docker-build-images-order:
+	docker tag order snagarju/order:latest
+	docker tag order snagarju/order:${BUILD_VERSION}
+	docker push snagarju/order:latest
+	docker push snagarju/order:${BUILD_VERSION}
+
 
 oapi-gen:	## Generate server code with oapi-codegen for single service
 	@echo Generating server for mail server
