@@ -16,6 +16,7 @@ resources:
 env:
   GIN_MODE: debug
   GIN_ACCESS_LOG: true
+  OTEL_EXPORTER_OTLP_ENDPOINT: "localhost:4317"
 
 service:
   name: order

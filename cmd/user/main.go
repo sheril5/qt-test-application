@@ -41,7 +41,7 @@ func main() {
 		}
 	}()
 
-	user.InitDB(config)
+	// user.InitDB(config)
 	user.SetupServer(config)
 
 }

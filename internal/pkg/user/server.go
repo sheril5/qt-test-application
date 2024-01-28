@@ -6,7 +6,12 @@ package user
 import (
 	"context"
 	"errors"
-	"fmt"
+	"log"
+	"net/http"
+	"os"
+	"os/signal"
+	"time"
+
 	"github.com/gorilla/mux"
 	"github.com/naga2HPE/qt-test-application/internal/pkg/config"
 	"github.com/naga2HPE/qt-test-application/internal/pkg/datastore"
@@ -15,11 +20,8 @@ import (
 	logger "github.com/sirupsen/logrus"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/gorilla/mux/otelmux"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
-	"log"
-	"net/http"
-	"os"
-	"os/signal"
 )
 
 /*
@@ -93,16 +95,18 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ctx, span := tracer.Start(r.Context(), "create user")
+	_, span := tracer.Start(r.Context(), "create user")
 	defer span.End()
-	id, err := db.InsertOne(ctx, datastore.InsertParams{
-		Query: `INSERT INTO USERS(USER_NAME, ACCOUNT) VALUES (?, ?)`,
-		Vars:  []interface{}{u.UserName, u.Account},
-	})
-	if err != nil {
-		utils.WriteErrorResponse(w, http.StatusInternalServerError, fmt.Errorf("create user error: %w", err))
-		return
-	}
+
+	id := time.Now().UnixMilli()
+	// id, err := db.InsertOne(ctx, datastore.InsertParams{
+	// 	Query: `INSERT INTO USERS(USER_NAME, ACCOUNT) VALUES (?, ?)`,
+	// 	Vars:  []interface{}{u.UserName, u.Account},
+	// })
+	// if err != nil {
+	// 	utils.WriteErrorResponse(w, http.StatusInternalServerError, fmt.Errorf("create user error: %w", err))
+	// 	return
+	// }
 	logger.Infof("user ID :%s", id)
 	u.ID = id
 	utils.WriteResponse(w, http.StatusCreated, u)
@@ -110,20 +114,22 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 
 func getUser(w http.ResponseWriter, r *http.Request) {
 	userID := mux.Vars(r)["userID"]
-	var u user
+	// var u user
 
-	ctx, span := tracer.Start(r.Context(), "get user")
+	_, span := tracer.Start(r.Context(), "get user")
 	defer span.End()
-	if err := db.SelectOne(ctx, datastore.SelectParams{
-		Query:   `select ID, USER_NAME, ACCOUNT, AMOUNT from USERS where ID = ?`,
-		Filters: []interface{}{userID},
-		Result:  []interface{}{&u.ID, &u.UserName, &u.Account, &u.Amount},
-	}); err != nil {
-		utils.WriteErrorResponse(w, http.StatusInternalServerError, fmt.Errorf("get user error: %w", err))
-		return
-	}
+	span.SetAttributes(attribute.String("userID", userID))
 
-	utils.WriteResponse(w, http.StatusOK, u)
+	// if err := db.SelectOne(ctx, datastore.SelectParams{
+	// 	Query:   `select ID, USER_NAME, ACCOUNT, AMOUNT from USERS where ID = ?`,
+	// 	Filters: []interface{}{userID},
+	// 	Result:  []interface{}{&u.ID, &u.UserName, &u.Account, &u.Amount},
+	// }); err != nil {
+	// 	utils.WriteErrorResponse(w, http.StatusInternalServerError, fmt.Errorf("get user error: %w", err))
+	// 	return
+	// }
+
+	utils.WriteResponse(w, http.StatusOK, user{ID: 1234, UserName: "JAD", Account: "jad", Amount: 1000})
 }
 
 func updateUser(w http.ResponseWriter, r *http.Request) {
@@ -133,15 +139,16 @@ func updateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ctx, span := tracer.Start(r.Context(), "update user amount")
+	_, span := tracer.Start(r.Context(), "update user amount")
 	defer span.End()
-	if err := db.UpdateOne(ctx, datastore.UpdateParams{
-		Query: `update USERS set AMOUNT = AMOUNT + ? where ID = ?`,
-		Vars:  []interface{}{data.Amount, userID},
-	}); err != nil {
-		utils.WriteErrorResponse(w, http.StatusInternalServerError, fmt.Errorf("get user error: %w", err))
-		return
-	}
+	span.SetAttributes(attribute.String("userID", userID))
+	// if err := db.UpdateOne(ctx, datastore.UpdateParams{
+	// 	Query: `update USERS set AMOUNT = AMOUNT + ? where ID = ?`,
+	// 	Vars:  []interface{}{data.Amount, userID},
+	// }); err != nil {
+	// 	utils.WriteErrorResponse(w, http.StatusInternalServerError, fmt.Errorf("get user error: %w", err))
+	// 	return
+	// }
 
 	w.WriteHeader(http.StatusOK)
 }
