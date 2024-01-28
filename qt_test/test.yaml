@@ -1,0 +1,18 @@
+type: Test
+spec:
+  id: 0oiSNdpSg
+  name: new_user
+  trigger:
+    type: http
+    httpRequest:
+      method: GET
+      url: http://user-dev.alpha.intelops.app/users/123587
+      headers:
+      - key: Content-Type
+        value: application/json
+  specs:
+  - selector: span[tracetest.span.type="general" name="get user"]
+    name: userid Assertion
+    assertions:
+    - attr:userID = 123587
+
