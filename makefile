@@ -46,6 +46,13 @@ run:
 	CGO_ENABLED=0 GO111MODULE=on /usr/local/go/bin/go run -mod=vendor  cmd/sample-http-server/main.go
 
 
+vendor: go.mod go.sum
+	@echo Downloading modules
+	@go mod tidy
+	@go mod download
+	@go mod vendor
+.PHONY: vendor
+
 build: build_user  build_payment build_order
 build_user:
 	env GOOS=linux CGO_ENABLED=0 GO111MODULE=on /usr/local/go/bin/go build -mod=vendor -o builds/user cmd/user/main.go
