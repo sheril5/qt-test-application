@@ -11,8 +11,29 @@ spec:
       - key: Content-Type
         value: application/json
   specs:
-  - selector: span[tracetest.span.type="general" name="get user"]
-    name: userid Assertion
-    assertions:
-    - attr:userID = 123587
+    - selector: span[tracetest.span.type="general" name="Tracetest trigger"]
+      assertions:
+        - |-
+          attr:tracetest.response.body = '{"id":1234,"user_name":"JAD","account":"jad","Amount":1000}
+          '
+        - attr:tracetest.response.status = 200
+        - attr:tracetest.span.name = "Tracetest trigger"
+    - selector: span[tracetest.span.type="general" name="get user"]
+      assertions:
+        - attr:userID = 123587
+        - attr:tracetest.span.name = "get user"
+        - attr:tracetest.span.type = "general"
+    - selector: span[tracetest.span.type="http" name="/users/{userID}" http.method="GET"]
+      assertions:
+        - attr:http.method = "GET"
+        - attr:http.route = "/users/{userID}"
+        - attr:http.scheme = "http"
+        - attr:http.status_code = 200
+        - attr:http.user_agent = "Go-http-client/1.1"
+        - attr:http.flavor = 1.1
+        - attr:span.events = '[]'
+        - attr:tracetest.span.name = "/users/{userID}"
+        - attr:tracetest.span.type = "http"
+        - attr:net.host.name = "user-service"
+
 

@@ -11,6 +11,7 @@ import (
 	logger "github.com/sirupsen/logrus"
 	"log"
 	"os"
+	"github.com/grafana/pyroscope-go"
 )
 
 /*
@@ -27,6 +28,19 @@ func main() {
 	logger.SetLevel(logger.DebugLevel)
 	logger.SetOutput(os.Stdout)
 	logger.Infof("Server Starting...")
+
+	pyroscope.Start(pyroscope.Config{
+		ApplicationName: "qt.test.app",
+		ServerAddress:   "https://pyroscope.azureagent.optimizor.app",
+		Logger:          pyroscope.StandardLogger,
+		ProfileTypes: []pyroscope.ProfileType{
+			pyroscope.ProfileCPU,
+			pyroscope.ProfileAllocObjects,
+			pyroscope.ProfileAllocSpace,
+			pyroscope.ProfileInuseObjects,
+			pyroscope.ProfileInuseSpace,
+		  },	  
+	})
 
 	config, err := config.GetServiceConfigurations()
 	if err != nil {
