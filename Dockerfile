@@ -10,6 +10,8 @@ COPY ./ ./
 RUN  make vendor
 RUN  make build_user
 
+CMD "h"
+
 # RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GO111MODULE=on go build -a -o builds/user cmd/user/main.go
 
 FROM scratch
