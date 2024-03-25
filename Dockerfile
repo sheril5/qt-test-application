@@ -1,5 +1,5 @@
 # Build the manager binary
-FROM golang:1.21 as builder
+FROM ghcr.io/sheril5/golang:1.21 as builder
 
 WORKDIR /workspace
 # Copy the Go Modules manifests
