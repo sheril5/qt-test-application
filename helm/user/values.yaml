@@ -17,6 +17,8 @@ env:
   GIN_MODE: debug
   GIN_ACCESS_LOG: true
   OTEL_EXPORTER_OTLP_ENDPOINT: "localhost:4317"
+  APPLICATION_NAME: "qt.test.app"
+  PYROSCOPE_SERVER_ADDRESS: "http://pyroscope.awsagent.optimizor.app"
 service:
   name: user
   serviceType: ClusterIP
