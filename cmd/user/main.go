@@ -29,9 +29,13 @@ func main() {
 	logger.SetOutput(os.Stdout)
 	logger.Infof("Server Starting...")
 
+	// Get ApplicationName and ServerAddress from environmental variables
+	applicationName := os.Getenv("APPLICATION_NAME")
+	serverAddress := os.Getenv("PYROSCOPE_SERVER_ADDRESS")
+
 	pyroscope.Start(pyroscope.Config{
-		ApplicationName: "qt.test.app",
-		ServerAddress:   "http://pyroscope.awsagent.optimizor.app",
+		ApplicationName: applicationName,
+		ServerAddress:   serverAddress,
 		Logger:          pyroscope.StandardLogger,
 		ProfileTypes: []pyroscope.ProfileType{
 			pyroscope.ProfileCPU,
