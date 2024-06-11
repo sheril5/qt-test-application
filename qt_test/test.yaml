@@ -6,24 +6,24 @@ spec:
     type: http
     httpRequest:
       method: GET
-      url: http://qt-app.demo.optimizor.app/users/123587
+      url: http://<endpoint of the app>/users/123587
       headers:
       - key: Content-Type
         value: application/json
   specs:
-    - selector: span[tracetest.span.type="general" name="Tracetest trigger"]
+    - selector: span[qualitytrace.span.type="general" name="Qualitytrace trigger"]
       assertions:
         - |-
-          attr:tracetest.response.body = '{"id":1234,"user_name":"JAD","account":"jad","Amount":1000}
+          attr:qualitytrace.response.body = '{"id":1234,"user_name":"JAD","account":"jad","Amount":1000}
           '
-        - attr:tracetest.response.status = 200
-        - attr:tracetest.span.name = "Tracetest trigger"
-    - selector: span[tracetest.span.type="general" name="get user"]
+        - attr:qualitytrace.response.status = 200
+        - attr:qualitytrace.span.name = "Qualitytrace trigger"
+    - selector: span[qualitytrace.span.type="general" name="get user"]
       assertions:
         - attr:userID = 123587
-        - attr:tracetest.span.name = "get user"
-        - attr:tracetest.span.type = "general"
-    - selector: span[tracetest.span.type="http" name="/users/{userID}" http.method="GET"]
+        - attr:qualitytrace.span.name = "get user"
+        - attr:qualitytrace.span.type = "general"
+    - selector: span[qualitytrace.span.type="http" name="/users/{userID}" http.method="GET"]
       assertions:
         - attr:http.method = "GET"
         - attr:http.route = "/users/{userID}"
@@ -32,8 +32,6 @@ spec:
         - attr:http.user_agent = "Go-http-client/1.1"
         - attr:http.flavor = 1.1
         - attr:span.events = '[]'
-        - attr:tracetest.span.name = "/users/{userID}"
-        - attr:tracetest.span.type = "http"
+        - attr:qualitytrace.span.name = "/users/{userID}"
+        - attr:qualitytrace.span.type = "http"
         - attr:net.host.name = "user-service"
-
-
