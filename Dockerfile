@@ -1,6 +1,9 @@
 # Build the manager binary
 FROM ghcr.io/kube-tarian/helmrepo-supporting-tools/golang:1.21 as builder
 
+# Update and upgrade packages
+RUN apk update && apk upgrade
+
 WORKDIR /workspace
 # Copy the Go Modules manifests
 COPY ./ ./
