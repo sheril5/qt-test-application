@@ -1,2 +1,2 @@
 # qt-test-application
-capten
+capten demo 6/28
